@@ -1,9 +1,9 @@
 # Processing pipeline (Python notebooks) for "Multimodal MRI Marker of Cognition Explains the Association Between Cognition and Mental Health in UK Biobank"
 **1_Cognitive_preprocessing**
 - 01_GetCogData: Uploading and primary preparation of cognitive performance data (selection of appropriate metrics, score transformation, etc.), including split into 5 folds.
-- 02_CogData_Descriptive_5Folds: Descriptive statistics for cognitive performance scores in each of the 5 folds.
+- 02_CogData_Descriptive_5Folds: Descriptive statistics for cognitive performance scores in each of the 5 folds (html view: https://HAM-lab-Otago-University.github.io/UKBiobank/1_Cognitive_preprocessing/03_GetGFactor_5Folds.html).
 - 03_GetGFactor_5Folds: Derivation of the *g*-factor using ESEM/CFA.
-- 04_GetGFactor_SingleSplit: Derivation of the *g*-factor using ESEM/CFA for a single train/test split to visualize model parameters.
+- 04_GetGFactor_SingleSplit: Derivation of the *g*-factor using ESEM/CFA for a single train/test split to visualize model parameters (html view: https://HAM-lab-Otago-University.github.io/UKBiobank/1_Cognitive_preprocessing/04_GetGFactor_SingleSplit.html).
 
 **2_Mental_Health**
 - 01_GetMHData:
