@@ -1,0 +1,50 @@
+---
+title: 'Mental Health Features: Descriptive'
+author: "IB"
+date: "2024-06-19"
+output:
+  word_document: default
+  html_document: default
+---
+
+# Setting up libraries
+
+
+```{r setup, include=FALSE} 
+library(knitr)
+library(summarytools)
+opts_chunk$set(results = 'asis',     # Can also be set at chunk level
+              comment = NA,
+              prompt  = FALSE,
+              cache   = FALSE)
+st_options(plain.ascii = FALSE,       # Always use in Rmd documents
+           style       = "rmarkdown", # Always use in Rmd documents
+           subtitle.emphasis = FALSE) # Improves layout w/ some themes
+```
+
+
+# Loading data
+
+## Setting up paths
+
+
+```{r}
+mh <- read.csv('/Cog-Ment/CSVs/2024/mental_health/mental_health_full_renamed.csv')
+```
+
+# Compile tables
+
+## complie the baseline tables
+
+```{r}
+library(summarytools)
+mh_summary <- dfSummary(mh[, -1], 
+          plain.ascii  = FALSE, 
+          style        = "grid", 
+          graph.magnif = 0.75,
+          valid.col    = FALSE,
+          na.col = FALSE,
+          tmp.img.dir  = "/tmp")
+mh_summary$Variable <- sub("\\[.+\\]", "", mh_summary$Variable)
+mh_summary
+```
