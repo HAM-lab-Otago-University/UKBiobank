@@ -1,0 +1,135 @@
+Libraries
+```{r}
+library(data.table)
+library(psych) 
+library(GPArotation)
+library(corpcor)
+library(EFAtools)
+library(lavaan)
+library(lavaanPlot)
+library(esemComp)
+library(ggplot2) 
+```
+Set working directory
+```{r}
+setwd('/R/g-factor/')
+```
+Upload train and test obtained and scaled in python)
+
+```{r}
+train = read.csv("/Cog-Ment/PLS/mh/Single_split/y_train_scaled.csv", header=TRUE)
+test = read.csv("/Cog-Ment/PLS/mh/Single_split/y_test_scaled.csv", header=TRUE)
+```
+Factor analysis
+```{r}
+fa.parallel(train)
+```
+EFA
+```{r}
+efa <- esem_efa(train, nfactors = 4)
+loadings <- efa$loadings
+efa
+```
+Rename columns
+```{r}
+new_names <- c(log_RT = "(log)Reaction time",
+               FIS = "Fluid intelligence score",
+               Numeric.memory.Max.digits.remembered.correctly = "Numeric memory: Maximum digits remembered correctly",
+               log_TMT.Duration.to.complete.numeric.path = "(log)Trail making test: Duration to complete numeric path",
+               log_TMT.Duration.to.complete.alphanumeric.path = "(log)Trail making test: Duration to complete alphabetic path",
+               SDS.Numb.of.symbol.digit.matches.made.correctly = "Symbol digit substitution: Number of correct matches",
+               PALNumbofwordpairscorrectlyassociated = "Paired associate learning: Number of correct pairs",
+               Tower.rearranging.Numb.of.puzzles.correct = "Tower rearranging: Number of puzzles correct",
+               Matrix.PC..Numb.of.puzzles.correctly.solved = "Matrix pattern completion: Number of puzzles correct",
+               log1p_Pairs.match.Incorrect.matches..round.2. = "(logx+1)Pairs matching: Incorrect matches",
+               Picture.vocab.Specific.cognitive.ability = "Picture vocabulary: Specific cognitive ability",
+               Prosp.memory.Initial.answer = "Prospective memory: Initial answer")
+```
+
+Loading table
+```{r}
+esem_loadings <- data.table(matrix(round(loadings, 4), nrow = 12, ncol = 4))
+names(esem_loadings) <- c("Factor 1","Factor 2","Factor 3", "Factor 4")
+esem_loadings$item <- paste0(new_names)
+esem_loadings <- melt(esem_loadings, "item", variable.name = "latent")
+esem_loadings
+```
+
+
+Visualize factor loadings
+```{r}
+levels(esem_loadings$latent) <- c("Factor 1","Factor 2","Factor 3", "Factor 4")
+ggplot(esem_loadings, aes(x = item, y = value)) + #, fill = latent + 
+           geom_bar(stat = "identity", fill='white', color='black', linewidth=0.2, position=position_dodge(width=0.1)) + 
+  coord_flip() + 
+  facet_wrap(~ latent, ncol = 1) + 
+  theme(legend.position = 'none', panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_rect(fill = "white"),
+        axis.title.y = element_text(vjust = 15),
+        axis.title.x = element_text(vjust = -0.75, color = "black", size = 20),
+        
+        plot.title = element_text(color = "black", size = 25),
+        plot.subtitle = element_text(color = "black", size = 40),
+        
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 10), strip.text = element_text(size = 16)) + scale_x_discrete(position = "top") + scale_y_continuous(breaks = seq(-1, 1, by = 0.1)) +
+        # Remove y axis name, change x axis title, and add main title
+        ylab("Factor loading") + theme(axis.title.x = element_text(size = 15)) + xlab("") + theme(plot.title = element_text(hjust = 0.5, size = 15))
+```
+
+Find referents and build the model
+```{r}
+#0
+referents <- find_referents(efa, factor_names = paste0("F",1:4))
+model_syntax <- syntax_composer(efa, referents, only_fix_crossloadings = FALSE)
+g_model <- paste(model_syntax,
+                               "g =~ NA*F1 + F2 + F3 + F4 \n g ~~ 1*g \n", sep = "\n")
+```
+Fit the model
+```{r}
+model_fit <- cfa(g_model, std.lv=T, data = train)
+summary(model_fit, fit.measures = T, standardized = T)
+```
+lavaan Plot
+```{r}
+lavaan_plot <- 
+lavaanPlot(model = model_fit, coefs = TRUE,
+      
+           
+           #graph_options = list(fontsize = "100")
+           node_options = list(shape = "box", width = 6, height = 2.5, fontsize = "55"),  # Increase node size
+           edge_options = list(color = "black", fontsize = "45"),
+
+labels = list(
+MatrixPCNumbofpuzzlescorrectlysolved = "Matrix pattern completion",
+NumericmemoryMaxdigitsrememberedcorrectly = "Numeric memory",
+FIS = "Fluid intelligence score",
+ProspmemoryInitialanswer = "Prospective memory",
+PALNumbofwordpairscorrectlyassociated = "Paired associate learning",
+log_TMTDurationtocompletealphanumericpath = "(log)Trail making test, alphabetic", SDSNumbofsymboldigitmatchesmadecorrectly = "Symbol digit substitution",
+PicturevocabSpecificcognitiveability = "Picture vocabulary",
+log_RT = "(log)Reaction time",
+log1p_PairsmatchIncorrectmatchesround2 = "(log1p)Pairs matching",
+log_TMTDurationtocompletenumericpath = "(log)Trail making test, numeric",
+TowerrearrangingNumbofpuzzlescorrect = "Tower rearranging")
+)
+```
+
+
+```{r}
+latents_train <- lavaan::lavPredict(model_fit, newdata = train, type = "lv")
+latents_test <- lavaan::lavPredict(model_fit, newdata = test, type = "lv")
+```
+
+Get g-factor
+```{r}
+
+latents_train <- lavaan::lavPredict(model_fit, newdata = train, type = "lv")
+latents_test <- lavaan::lavPredict(model_fit, newdata = test, type = "lv")
+  
+# Extract g
+g_train <- cbind(latents_train[, 5]) # or g_train <- latents_train[, 5, drop = FALSE]
+colnames(g_train) <- "g"
+  
+g_test <- cbind(latents_test[, 5])
+colnames(g_test) <- "g"
+```

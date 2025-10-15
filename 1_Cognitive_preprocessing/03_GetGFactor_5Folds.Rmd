@@ -1,0 +1,336 @@
+Libraries
+```{r}
+library(data.table)
+library(psych) 
+library(GPArotation)
+library(corpcor)
+library(EFAtools)
+library(lavaan)
+library(lavaanPlot)
+library(esemComp)
+library(ggplot2)
+```
+Set working directory
+```{r}
+setwd('/Cog-Ment/R/g_factor_5_folds/')
+```
+#Upload train and test sets generated and scaled in Python
+```{r}
+#0
+train_0 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_0/train_scaled_fold_0.csv", header=TRUE)
+test_0 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_0/test_scaled_fold_0.csv", header=TRUE)
+#1
+train_1 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_1/train_scaled_fold_1.csv", header=TRUE)
+test_1 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_1/test_scaled_fold_1.csv", header=TRUE)
+#2
+train_2 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_2/train_scaled_fold_2.csv", header=TRUE)
+test_2 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_2/test_scaled_fold_2.csv", header=TRUE)
+#3
+train_3 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_3/train_scaled_fold_3.csv", header=TRUE)
+test_3 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_3/test_scaled_fold_3.csv", header=TRUE)
+#4
+train_4 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_4/train_scaled_fold_4.csv", header=TRUE)
+test_4 = read.csv("/Cog-Ment/g_factor_5_folds_python/fold_4/test_scaled_fold_4.csv", header=TRUE)
+```
+#Factorability
+##Bartlett test
+```{r}
+# Train
+cortest.bartlett(cor(train_0), n = nrow(data))
+cortest.bartlett(cor(train_1), n = nrow(data))
+cortest.bartlett(cor(train_2), n = nrow(data))
+cortest.bartlett(cor(train_3), n = nrow(data))
+cortest.bartlett(cor(train_4), n = nrow(data))
+#Test
+cortest.bartlett(cor(test_0), n = nrow(data))
+cortest.bartlett(cor(test_1), n = nrow(data))
+cortest.bartlett(cor(test_2), n = nrow(data))
+cortest.bartlett(cor(test_3), n = nrow(data))
+cortest.bartlett(cor(test_4), n = nrow(data))
+```
+##KMO test
+```{r}
+#Train
+KMO(train_0)
+KMO(train_1)
+KMO(train_2)
+KMO(train_3)
+KMO(train_4)
+#Test
+KMO(test_0)
+KMO(test_1)
+KMO(test_2)
+KMO(test_3)
+KMO(test_4)
+```
+#Exploratory Factor Analysis (EFA)
+```{r}
+#0 
+fa.parallel(train_0)
+#Stu
+fa.parallel(train_1)
+#2
+fa.parallel(train_2)
+#3
+fa.parallel(train_3)
+#4
+fa.parallel(train_4)
+```
+##Fit EFA
+```{r}
+#0 
+efa_0 <- esem_efa(train_0, nfactors = 4)
+loadings_0 <- efa_0$loadings
+efa_1 <- esem_efa(train_1, nfactors = 4)
+loadings_1 <- efa_1$loadings
+#2
+efa_2 <- esem_efa(train_2, nfactors = 4)
+loadings_2 <- efa_2$loadings
+#3
+efa_3 <- esem_efa(train_3, nfactors = 4)
+loadings_3 <- efa_3$loadings
+#4
+efa_4 <- esem_efa(train_4, nfactors = 4)
+loadings_4 <- efa_4$loadings
+```
+
+
+```{r}
+loadings_0
+loadings_1
+loadings_2
+loadings_3
+loadings_4
+```
+
+###Rename columns
+```{r}
+new_names <- c(log_RT = "(log)Reaction time",
+               FIS = "Fluid intelligence score",
+               Numeric.memory.Max.digits.remembered.correctly = "Numeric memory: Maximum digits remembered correctly",
+               log_TMT.Duration.to.complete.numeric.path = "(log)Trail making test: Duration numeric",
+               log_TMT.Duration.to.complete.alphanumeric.path = "(log)Trail making test: Duration alphabetic",
+               SDS.Numb.of.symbol.digit.matches.made.correctly = "Symbol digit substitution: Number of correct matches",
+               PALNumbofwordpairscorrectlyassociated = "Paired associate learning: Number of correct pairs",
+               Tower.rearranging.Numb.of.puzzles.correct = "Tower rearranging: Number of puzzles correct",
+               Matrix.PC..Numb.of.puzzles.correctly.solved = "Matrix pattern completion: Number of puzzles correct",
+               log1p_Pairs.match.Incorrect.matches..round.2. = "(log1p)Pairs matching: Incorrect matches",
+               Picture.vocab.Specific.cognitive.ability = "Picture vocabulary: Specific cognitive ability",
+               Prosp.memory.Initial.answer = "Prospective memory: Initial answer")
+```
+##Create loading tables
+```{r}
+#0
+esem_loadings_0 <- data.table(matrix(round(loadings_0, 4), nrow = 12, ncol = 4))
+names(esem_loadings_0) <- c("F1","F2","F3", "F4")
+esem_loadings_0$item <- paste0(new_names)
+esem_loadings_0 <- melt(esem_loadings_0, "item", variable.name = "latent")
+#1
+esem_loadings_1 <- data.table(matrix(round(loadings_1, 4), nrow = 12, ncol = 4))
+names(esem_loadings_1) <- c("F1","F2","F3", "F4")
+esem_loadings_1$item <- paste0(new_names)
+esem_loadings_1 <- melt(esem_loadings_1, "item", variable.name = "latent")
+#2
+esem_loadings_2 <- data.table(matrix(round(loadings_2, 4), nrow = 12, ncol = 4))
+names(esem_loadings_2) <- c("F1","F2","F3", "F4")
+esem_loadings_2$item <- paste0(new_names)
+esem_loadings_2 <- melt(esem_loadings_2, "item", variable.name = "latent")
+#3
+esem_loadings_3 <- data.table(matrix(round(loadings_3, 4), nrow = 12, ncol = 4))
+names(esem_loadings_3) <- c("F1","F2","F3", "F4")
+esem_loadings_3$item <- paste0(new_names)
+esem_loadings_3 <- melt(esem_loadings_3, "item", variable.name = "latent")
+#4
+esem_loadings_4 <- data.table(matrix(round(loadings_4, 4), nrow = 12, ncol = 4))
+names(esem_loadings_4) <- c("F1","F2","F3", "F4")
+esem_loadings_4$item <- paste0(new_names)
+esem_loadings_4 <- melt(esem_loadings_4, "item", variable.name = "latent")
+```
+##Visualize factor loadings
+```{r}
+#0-4
+indices <- 0:4
+for (i in indices) {
+  # Create a plot name
+  plot_name <- paste0("loading_plot_", i)
+  # Create a data name
+  data_name <- paste0("esem_loadings_", i)
+  # Assign the plot to the plot name using assign()
+  assign(plot_name, ggplot(get(data_name), aes(x = item, y = value, fill = latent)) + 
+           geom_bar(stat = "identity") + coord_flip() + facet_wrap(~ latent, ncol = 1) + 
+  theme(legend.position = 'none', panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_rect(fill = "white"),
+        axis.title.y = element_text(vjust = 15),
+        axis.title.x = element_text(vjust = -0.75, color = "black", size = 20),
+        
+        plot.title = element_text(color = "black", size = 25),
+        plot.subtitle = element_text(color = "black", size = 40),
+        
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 8)) + scale_x_discrete(position = "top") +
+        # Remove y axis name, change x axis title, and add main title
+        ylab("Factor loading") + theme(axis.title.x = element_text(size = 10)) + xlab("") + ggtitle(paste0("Fold ", i)) + theme(plot.title = element_text(hjust = 0.5, size = 15)))
+}
+
+loading_plot_0
+loading_plot_1
+loading_plot_2
+loading_plot_3
+loading_plot_4
+```
+##Find referents and build the model
+```{r}
+#0
+referents_0 <- find_referents(efa_0, factor_names = paste0("F",1:4))
+model_syntax_0 <- syntax_composer(efa_0, referents_0, only_fix_crossloadings = FALSE)
+g_model_0 <- paste(model_syntax_0,
+                               "g =~ NA*F1 + F2 + F3 + F4 \n g ~~ 1*g \n", sep = "\n")
+#1
+referents_1 <- find_referents(efa_1, factor_names = paste0("F",1:4))
+model_syntax_1 <- syntax_composer(efa_1, referents_1, only_fix_crossloadings = FALSE)
+g_model_1 <- paste(model_syntax_1,
+                               "g =~ NA*F1 + F2 + F3 + F4 \n g ~~ 1*g \n", sep = "\n")
+#2
+referents_2 <- find_referents(efa_2, factor_names = paste0("F",1:4))
+model_syntax_2 <- syntax_composer(efa_2, referents_2, only_fix_crossloadings = FALSE)
+g_model_2 <- paste(model_syntax_2,
+                               "g =~ NA*F1 + F2 + F3 + F4 \n g ~~ 1*g \n", sep = "\n")
+#3
+referents_3 <- find_referents(efa_3, factor_names = paste0("F",1:4))
+model_syntax_3 <- syntax_composer(efa_3, referents_3, only_fix_crossloadings = FALSE)
+g_model_3 <- paste(model_syntax_3,
+                               "g =~ NA*F1 + F2 + F3 + F4 \n g ~~ 1*g \n", sep = "\n")
+#4
+referents_4 <- find_referents(efa_4, factor_names = paste0("F",1:4))
+model_syntax_4 <- syntax_composer(efa_4, referents_4, only_fix_crossloadings = FALSE)
+g_model_4 <- paste(model_syntax_4,
+                               "g =~ NA*F1 + F2 + F3 + F4 \n g ~~ 1*g \n", sep = "\n")
+```
+#Fit the model
+
+- Brown, T. A. (2015). Confirmatory factor analysis for applied research (2nd Edition). New York, NY: Guilford Press.
+Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis: Conventional criteria versus new alternatives. Structural Equation Modeling, 6, 1-55.
+- Kline, R. B. (2010). Principles and practice of structural equation modeling (3rd Edition). New York, NY: Guilford Press.
+Little, T. D. (2013). Longitudinal structural equation modeling. New York, NY: Guilford Press.
+
+```{r}
+#0
+model_0_fit <- cfa(g_model_0, std.lv=T, data = train_0)
+summary(model_0_fit, fit.measures = T, standardized = T)
+#1
+model_1_fit <- cfa(g_model_1, std.lv=T, data = train_1)
+summary(model_1_fit, fit.measures = T, standardized = T)
+#2
+model_2_fit <- cfa(g_model_2, std.lv=T, data = train_2)
+summary(model_2_fit, fit.measures = T, standardized = T)
+#3
+model_3_fit <- cfa(g_model_3, std.lv=T, data = train_3)
+summary(model_3_fit, fit.measures = T, standardized = T)
+#4
+model_4_fit <- cfa(g_model_4, std.lv=T, data = train_4)
+summary(model_4_fit, fit.measures = T, standardized = T)
+```
+
+# Calculate the proportion of variance explained by the g-factor
+
+```{r}
+#inspect(model_4_fit, what = "std")$theta - standardized unique (residual) variances of all items 
+# 1 - rowSums(...) the variance explained by the g-factor for each item.
+
+total_variance_explained_0 <- 1 - mean(rowSums(inspect(model_0_fit,what="std")$theta))
+total_variance_explained_0
+
+total_variance_explained_1 <- 1 - mean(rowSums(inspect(model_1_fit,what="std")$theta))
+total_variance_explained_1
+
+
+total_variance_explained_2 <- 1 - mean(rowSums(inspect(model_2_fit,what="std")$theta))
+total_variance_explained_2
+
+
+total_variance_explained_3 <- 1 - mean(rowSums(inspect(model_3_fit,what="std")$theta))
+total_variance_explained_3
+
+
+total_variance_explained_4 <- 1 - mean(rowSums(inspect(model_4_fit,what="std")$theta))
+total_variance_explained_4
+
+mean_total_variance_explained <- mean(c(
+  total_variance_explained_0,
+  total_variance_explained_1,
+  total_variance_explained_2,
+  total_variance_explained_3,
+  total_variance_explained_4
+))
+mean_total_variance_explained
+
+```
+
+#lavaan Plot
+```{r}
+indices <- 0:4
+for (i in indices) {
+  plot_name <- paste0("lavaanPlot_", i)
+  data_name <- paste0("model_", i, "_fit")
+  assign(plot_name, lavaanPlot(model = get(data_name), coefs = TRUE,
+
+labels = list(
+MatrixPCNumbofpuzzlescorrectlysolved = "Matrix pattern completion",
+NumericmemoryMaxdigitsrememberedcorrectly = "Numeric memory",
+FIS = "Fluid intelligence score",
+ProspmemoryInitialanswer = "Prospective memory",
+PALNumbofwordpairscorrectlyassociated = "Paired associate learning",
+log_TMTDurationtocompletealphanumericpath = "(log)Trail making test, alphanumeric", SDSNumbofsymboldigitmatchesmadecorrectly = "Symbol digit substitution",
+PicturevocabSpecificcognitiveability = "Picture vocabulary",
+log_RT = "(log)RT",
+log1p_PairsmatchIncorrectmatchesround2 = "(log)Pairs matching",
+log_TMTDurationtocompletenumericpath = "(log)Trail making test, numeric",
+TowerrearrangingNumbofpuzzlescorrect = "Tower rearranging")
+))
+}
+
+lavaanPlot_0
+lavaanPlot_1
+lavaanPlot_2
+lavaanPlot_3
+lavaanPlot_4
+```
+#Get g-factor
+```{r}
+for (i in 0:4) {
+  model <- get(paste0('model_', i, '_fit'))
+  train_data <- get(paste0("train_", i))
+  test_data <- get(paste0("test_", i))
+  latents_train <- lavaan::lavPredict(model, newdata = train_data, type = "lv")
+  latents_test <- lavaan::lavPredict(model, newdata = test_data, type = "lv")
+  
+  # Get latents
+  assign(paste0("latents_train_", i), latents_train, envir = .GlobalEnv)
+  assign(paste0("latents_test_", i), latents_test, envir = .GlobalEnv)
+  
+  # Extract g
+  g_train <- cbind(latents_train[, 5])
+  colnames(g_train) <- "g"
+  
+  g_test <- cbind(latents_test[, 5])
+  colnames(g_test) <- "g"
+  
+  assign(paste0("g_train_", i), g_train, envir = .GlobalEnv)
+  assign(paste0("g_test_", i), g_test, envir = .GlobalEnv)
+  
+  # Save as csv
+  #write.csv(g_train, file = file.path(paste0("fold_", i), paste0("g_train_", i, ".csv")), row.names = FALSE)
+  #write.csv(g_test, file = file.path(paste0("fold_", i), paste0("g_test_", i, ".csv")), row.names = FALSE)
+
+  #Extract factors
+  f_train <- cbind(latents_train[, 1:4])
+  f_test <- cbind(latents_test[, 1:4])
+  
+  assign(paste0("f_train_", i), f_train, envir = .GlobalEnv)
+  assign(paste0("f_test_", i), f_test, envir = .GlobalEnv)
+  
+  # Save as csv
+  #write.csv(f_train, file = file.path(paste0("fold_", i), paste0("f_train_", i, ".csv")), row.names=FALSE)
+  #write.csv(f_test, file = file.path(paste0("fold_", i), paste0("f_test_", i, ".csv")), row.names=FALSE)
+  
+}
+```
