@@ -1,4 +1,4 @@
-#Multimodal MRI Marker of Cognition Explains the Association Between Cognition and Mental Health in UK Biobank
+**Multimodal MRI Marker of Cognition Explains the Association Between Cognition and Mental Health in UK Biobank**
 
 Analysis codes for the study "Multimodal MRI Marker of Cognition Explains the Association Between Cognition and Mental Health in UK Biobank" published in _eLife_ on 12 September 2025
 
